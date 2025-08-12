@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>I Love You — Devasree Bala</title>
+<style>
+  :root{
+    --bg-1: #0f172a;
+    --bg-2: #6b21a8;
+    --accent: #ff5577;
+    --accent-2: #ff9bb3;
+    --glass: rgba(255,255,255,0.06);
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
+    background: radial-gradient(circle at 10% 10%, rgba(255,120,170,0.06), transparent 10%),
+                linear-gradient(135deg, var(--bg-1), var(--bg-2));
+    color: #fff;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+
+  .wrap{
+    width: min(960px, 92vw);
+    padding: clamp(24px, 4vw, 48px);
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+    box-shadow: 0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.02);
+    backdrop-filter: blur(6px) saturate(120%);
+    position:relative;
+    text-align:center;
+  }
+
+  .message{
+    display:inline-block;
+    padding: 18px 28px;
+    border-radius: 14px;
+  }
+
+  h1{
+    margin:0;
+    letter-spacing: 0.02em;
+    font-weight:700;
+    font-size: clamp(36px, 8vw, 96px);
+    line-height: 0.95;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: 12px;
+    transform-origin:center;
+    text-shadow:
+      0 6px 28px rgba(107,33,168,0.18),
+      0 2px 6px rgba(0,0,0,0.6);
+  }
+
+  .heart-inline{
+    display:inline-grid;
+    place-items:center;
+    width: min(22vw, 88px);
+    height: min(22vw, 88px);
+    font-size: clamp(28px, 6vw, 56px);
+    color: var(--accent);
+    filter: drop-shadow(0 6px 14px rgba(255,85,119,0.24));
+    transform-origin:center;
+  }
+
+  /* heart pop animation */
+  @keyframes popOnce{
+    0%{ transform: scale(0.8) rotate(-8deg); }
+    40%{ transform: scale(1.18) rotate(0deg);}
+    100%{ transform: scale(1) rotate(8deg);}
+  }
+  .pop{
+    animation: popOnce 0.6s ease-in-out;
+  }
+
+  p.sub{
+    margin: 14px 0 0;
+    font-size: clamp(14px, 2.1vw, 18px);
+    color: rgba(255,255,255,0.85);
+    max-width: 70ch;
+    margin-left:auto;
+    margin-right:auto;
+    opacity:0.95;
+  }
+
+  .floating-heart{
+    position:fixed;
+    pointer-events:none;
+    will-change: transform, opacity;
+    font-size: 20px;
+    user-select:none;
+    z-index: 30;
+    animation: floatUp linear forwards;
+    text-shadow: 0 6px 18px rgba(0,0,0,0.45);
+  }
+
+  @keyframes floatUp{
+    0%{ transform: translateY(0) scale(0.8); opacity: 1; }
+    100%{ transform: translateY(-140vh) translateX(18px) scale(1.4); opacity: 0; }
+  }
+
+  .controls{
+    margin-top: 18px;
+    display:flex;
+    gap:8px;
+    justify-content:center;
+  }
+
+  button.small{
+    background:var(--glass);
+    border: 1px solid rgba(255,255,255,0.04);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor:pointer;
+    font-size:14px;
+    transition: transform .12s ease, background .12s;
+  }
+  button.small:active{ transform: translateY(1px) scale(.995) }
+
+  .hint{
+    margin-top: 12px;
+    font-size:12px;
+    color: rgba(255,255,255,0.55);
+  }
+
+  @media (max-width:420px){
+    .wrap{ padding:20px }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="message">
+      <h1>
+        <span id="typed">I</span>
+        <span class="heart-inline" id="heart">❤</span>
+        <span id="typed-2">YOU</span>
+      </h1>
+
+      <p class="sub">click the heart or the button to send more hearts.</p>
+
+      <div class="controls">
+        <button class="small" id="burstBtn">Send a burst</button>
+        <button class="small" id="toggleBtn">Stop hearts</button>
+      </div>
+      <div class="hint">Tip: click or tap anywhere to create a heart at that spot.</div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const colors = ['#ff1f6c','#ff5577','#ff8aa1','#ffd1e0','#ff9bb3'];
+  let enabled = true;
+  const spawnRate = 700; 
+  let autoSpawnTimer = null;
+
+  function rand(min,max){ return Math.random()*(max-min)+min; }
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function makeHeart(x, y, size = null){
+    const el = document.createElement('div');
+    el.className = 'floating-heart';
+    el.textContent = '❤';
+    const s = size || Math.max(14, Math.round(rand(16, 46)));
+    el.style.fontSize = s + 'px';
+    el.style.color = pick(colors);
+    el.style.left = (x - s/2) + 'px';
+    el.style.top  = (y - s/2) + 'px';
+    const dur = rand(4.5, 8.2);
+    el.style.animationDuration = dur + 's';
+    el.style.rotate = rand(-30, 30) + 'deg';
+    document.body.appendChild(el);
+    setTimeout(()=> el.remove(), (dur*1000) + 800);
+  }
+
+  function spawnAt(x, y, size){
+    if (x == null){
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      x = vw/2 + rand(-80, 80);
+      y = vh/1.6 + rand(-20, 80);
+    }
+    makeHeart(x,y,size);
+  }
+
+  function burst(n = 12){
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const cx = vw/2;
+    const cy = vh/2;
+    for(let i=0;i<n;i++){
+      setTimeout(()=> {
+        const rx = cx + rand(-120, 120);
+        const ry = cy + rand(-60, 120);
+        makeHeart(rx, ry, Math.round(rand(18,56)));
+      }, i*40);
+    }
+  }
+
+  function startAuto(){
+    if (autoSpawnTimer) return;
+    autoSpawnTimer = setInterval(()=> {
+      if (enabled) spawnAt();
+    }, spawnRate);
+  }
+  function stopAuto(){
+    clearInterval(autoSpawnTimer);
+    autoSpawnTimer = null;
+  }
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.small')) return;
+    spawnAt(e.clientX, e.clientY, Math.round(rand(18,56)));
+  });
+
+  document.getElementById('burstBtn').addEventListener('click', ()=> burst(18));
+  const toggleBtn = document.getElementById('toggleBtn');
+  toggleBtn.addEventListener('click', ()=>{
+    enabled = !enabled;
+    toggleBtn.textContent = enabled ? 'Stop hearts' : 'Start hearts';
+    if (enabled) startAuto(); else stopAuto();
+  });
+
+  // Looping headline animation with synced heart pop
+  (function loopHeadlineAnim(){
+    const left = document.getElementById('typed');
+    const right = document.getElementById('typed-2');
+    const heart = document.getElementById('heart');
+
+    const reveal = (el, text, delayBetween=120, done) => {
+      el.textContent = '';
+      let i=0;
+      const timer = setInterval(()=>{
+        el.textContent += text[i++];
+        el.style.opacity = 1;
+        if (i >= text.length) {
+          clearInterval(timer);
+          if (done) done();
+        }
+      }, delayBetween);
+    };
+
+    function playOnce(){
+      left.style.opacity = 0;
+      right.style.opacity = 0;
+
+      setTimeout(()=> {
+        reveal(left, 'I', 90, ()=> {
+          // pop heart when 'I' finishes
+          heart.classList.remove('pop');
+          void heart.offsetWidth; // trigger reflow
+          heart.classList.add('pop');
+
+          setTimeout(()=> reveal(right, 'YOU', 140, ()=> {
+            setTimeout(playOnce, 2000);
+          }), 300);
+        });
+      }, 200);
+    }
+    playOnce();
+  })();
+
+  startAuto();
+  window.addEventListener('beforeunload', stopAuto);
+})();
+</script>
+</body>
+</html>
